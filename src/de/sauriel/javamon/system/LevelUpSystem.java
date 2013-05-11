@@ -47,4 +47,14 @@ public class LevelUpSystem {
 		}
 		return exp;		
 	}
+
+	public static int getLevelUpHP(int individualValueHP, int baseHP, int effortValueHP, int level) {
+		int newHP = (int) ((((double) individualValueHP + (double) baseHP + ((Math.sqrt((double) effortValueHP)) / 8) + 50) * (double) level) / 50) + 10;
+		return newHP;
+	}
+
+	public static int getLevelUpStats(int individualValueStat, int baseStat, int effortValueStat, int level) {
+		int newStat = (int) ((((double) individualValueStat + (double) baseStat + ((Math.sqrt((double) effortValueStat)) / 8)) * (double) level) / 50) + 5;
+		return newStat;
+	}
 }

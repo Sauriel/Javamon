@@ -45,6 +45,7 @@ public class Pokemon {
 	private HashMap<Integer, String> learnableMoves; 
 	
 	private int evolveLevel;
+	private int evolveToID;
 	
 	private int hp;
 	private int attack;
@@ -52,6 +53,13 @@ public class Pokemon {
 	private int specialAttack;
 	private int specialDefense;
 	private int speed;
+	
+	private int baseHP;
+	private int baseAttack;
+	private int baseDefense;
+	private int baseSpecialAttack;
+	private int baseSpecialDefense;
+	private int baseSpeed;
 	
 	private int accuracy = 100;
 	private int evasion = 100;
@@ -61,7 +69,6 @@ public class Pokemon {
 	private final int individualValueDefense;
 	private final int individualValueSpecialAttack;
 	private final int individualValueSpecialDefense;
-	private final int individualValueInitiative;
 	private final int individualValueSpeed;
 	
 	private int baseExpYield;
@@ -71,11 +78,11 @@ public class Pokemon {
 	private int effortValueDefense;
 	private int effortValueSpecialAttack;
 	private int effortValueSpecialDefense;
-	private int effortValueSpeed;					// INIT
+	private int effortValueSpeed;					// aka. INIT
 	
 	public Pokemon(int pokedexID, int level, boolean isWild, String item, String status, int actualHP) {
 		
-		this.level = level;
+		this.level = 1;
 		this.isWild = isWild;
 		this.item = item;
 		this.status = status;
@@ -124,6 +131,14 @@ public class Pokemon {
 				}
 				
 				this.evolveLevel = pokemon.getInt("evolveLevel");
+				this.evolveToID = pokemon.getInt("evolveToID");
+				
+				this.baseHP = pokemon.getInt("hp");
+				this.baseAttack = pokemon.getInt("attack");
+				this.baseDefense = pokemon.getInt("defense");
+				this.baseSpecialAttack = pokemon.getInt("specialAttack");
+				this.baseSpecialDefense = pokemon.getInt("specialDefense");
+				this.baseSpeed = pokemon.getInt("speed");
 				
 				this.hp = pokemon.getInt("hp");
 				this.attack = pokemon.getInt("attack");
@@ -151,55 +166,122 @@ public class Pokemon {
 		individualValueDefense = new Random().nextInt(32);
 		individualValueSpecialAttack = new Random().nextInt(32);
 		individualValueSpecialDefense = new Random().nextInt(32);
-		individualValueInitiative = new Random().nextInt(32);
 		individualValueSpeed = new Random().nextInt(32);
+		
+		if (level > 1) {
+			switch (expType) {
+			case "erratic":
+				receiveExp(LevelUpSystem.getErraticEXP(level - 1));
+				break;
+			case "fast":
+				receiveExp(LevelUpSystem.getFastEXP(level - 1));
+				break;
+			case "midfast":
+				receiveExp(LevelUpSystem.getMidFastEXP(level - 1));
+				break;
+			case "slow":
+				receiveExp(LevelUpSystem.getSlowEXP(level - 1));
+				break;
+			case "fluctuating":
+				receiveExp(LevelUpSystem.getFluctuatingEXP(level - 1));
+				break;
+			case "midslow":
+			default:
+				receiveExp(LevelUpSystem.getMidSlowEXP(level - 1));
+				break;
+			}
+		}
 	}
 
 
 	private void levelUp() {
+		
+		hp = LevelUpSystem.getLevelUpHP(individualValueHP, baseHP, effortValueHP, level);
+		attack = LevelUpSystem.getLevelUpStats(individualValueAttack, baseAttack, effortValueAttack, level);
+		defense = LevelUpSystem.getLevelUpStats(individualValueDefense, baseDefense, effortValueDefense, level);
+		specialAttack = LevelUpSystem.getLevelUpStats(individualValueSpecialAttack, baseSpecialAttack, effortValueSpecialAttack, level);
+		specialDefense = LevelUpSystem.getLevelUpStats(individualValueSpecialDefense, baseSpecialDefense, effortValueSpecialDefense, level);
+		speed = LevelUpSystem.getLevelUpStats(individualValueSpeed, baseSpeed, effortValueSpeed, level);
+		actualHP = hp;
 		level++;
 		
+		System.out.println(customName + " has reached level " + level + ".");
 		
-		// TODO http://wiki.pokemon-online.eu/wiki/Stat_formula
-		System.out.println("LEVEL UP");
+		checkLevelUpEvent(level);
 	}
 	
+	private void checkLevelUpEvent(int level) {
+		if (learnableMoves.containsKey(level)) {
+			learnNewMove(level);
+		} else if (evolveLevel == level) {
+			evolve(evolveToID);
+		}
+	}
+	
+	private void learnNewMove(int level) {
+		moves.add(new Move(learnableMoves.get(level)));
+		System.out.println(customName + " learned " + learnableMoves.get(level) + ".");
+		learnableMoves.remove(level);
+		// TODO modify the system, so that only four moves can be learned
+	}
+
+	private void evolve(int evolveToID) {
+		System.out.println(customName + " evolved to " + SQLiteConnector.getPokemonName(evolveToID) + ".");
+		// TODO write evolve method
+		// change custom name if it wasn't a custom name
+	}
+
 	public void receiveExp(int exp) {
 		if (level < 100) {
 			this.exp += exp;
-			switch (expType) {
-			case "erratic":
-				if (this.exp >= LevelUpSystem.getErraticEXP(level)) {
-					levelUp();
+			boolean loop = true;
+			do {
+				switch (expType) {
+				case "erratic":
+					if (this.exp >= LevelUpSystem.getErraticEXP(level)) {
+						levelUp();
+					} else {
+						loop = false;
+					}
+					break;
+				case "fast":
+					if (this.exp >= LevelUpSystem.getFastEXP(level)) {
+						levelUp();
+					} else {
+						loop = false;
+					}
+					break;
+				case "midfast":
+					if (this.exp >= LevelUpSystem.getMidFastEXP(level)) {
+						levelUp();
+					} else {
+						loop = false;
+					}
+					break;
+				case "slow":
+					if (this.exp >= LevelUpSystem.getSlowEXP(level)) {
+						levelUp();
+					} else {
+						loop = false;
+					}
+					break;
+				case "fluctuating":
+					if (this.exp >= LevelUpSystem.getFluctuatingEXP(level)) {
+						levelUp();
+					} else {
+						loop = false;
+					}
+					break;
+				case "midslow":
+				default:
+					if (this.exp >= LevelUpSystem.getMidSlowEXP(level)) {
+						levelUp();
+					} else {
+						loop = false;
+					}
+					break;
 				}
-				break;
-			case "fast":
-				if (this.exp >= LevelUpSystem.getFastEXP(level)) {
-					levelUp();
-				}
-				break;
-			case "midfast":
-				if (this.exp >= LevelUpSystem.getMidFastEXP(level)) {
-					levelUp();
-				}
-				break;
-			case "slow":
-				if (this.exp >= LevelUpSystem.getSlowEXP(level)) {
-					levelUp();
-				}
-				break;
-			case "fluctuating":
-				if (this.exp >= LevelUpSystem.getFluctuatingEXP(level)) {
-					levelUp();
-				}
-				break;
-			case "midslow":
-			default:
-				if (this.exp >= LevelUpSystem.getMidSlowEXP(level)) {
-					levelUp();
-				}
-				break;
-			}
+			} while (loop);
 		}
 	}
 	
@@ -233,6 +315,59 @@ public class Pokemon {
 		
 		return (int) yieldedExp;
 	}
+	
+	public void listDetails() {
+		System.out.println("name:\t\t\t\t" + name);
+		System.out.println("customName:\t\t\t" + customName);
+		System.out.println("sex:\t\t\t\t" + sex);
+		System.out.println("id:\t\t\t\t" + id);
+		System.out.println("pokedexID:\t\t\t" + pokedexID);
+		System.out.println("isWild:\t\t\t\t" + isWild);
+		System.out.println("isTraded:\t\t\t" + isTraded);
+		System.out.println("typ1:\t\t\t\t" + typ1);
+		System.out.println("typ2:\t\t\t\t" + typ2);
+		System.out.println("damagedNormal:\t\t\t" + Arrays.toString(damagedNormal));
+		System.out.println("damagedDouble:\t\t\t" + Arrays.toString(damagedDouble));
+		System.out.println("damagedImmune:\t\t\t" + Arrays.toString(damagedImmune));
+		System.out.println("damagedHalf:\t\t\t"	+ Arrays.toString(damagedHalf));
+		System.out.println("expType:\t\t\t" + expType);
+		System.out.println("exp:\t\t\t\t" + exp);
+		System.out.println("level:\t\t\t\t" + level);
+		System.out.println("actualHP:\t\t\t" + actualHP);
+		System.out.println("status:\t\t\t\t" + status);
+		System.out.println("item:\t\t\t\t" + item);
+		System.out.println("moves:\t\t\t\t" + moves);
+		System.out.println("learnableMoves:\t\t\t" + learnableMoves);
+		System.out.println("evolveLevel:\t\t\t" + evolveLevel);
+		System.out.println("evolveToID:\t\t\t" + evolveToID);
+		System.out.println("hp:\t\t\t\t" + hp);
+		System.out.println("attack:\t\t\t\t" + attack);
+		System.out.println("defense:\t\t\t" + defense);
+		System.out.println("specialAttack:\t\t\t" + specialAttack);
+		System.out.println("specialDefense:\t\t\t" + specialDefense);
+		System.out.println("speed:\t\t\t\t" + speed);
+		System.out.println("baseHP:\t\t\t\t" + baseHP);
+		System.out.println("baseAttack:\t\t\t" + baseAttack);
+		System.out.println("baseDefense:\t\t\t" + baseDefense);
+		System.out.println("baseSpecialAttack:\t\t" + baseSpecialAttack);
+		System.out.println("baseSpecialDefense:\t\t" + baseSpecialDefense);
+		System.out.println("baseSpeed:\t\t\t" + baseSpeed);
+		System.out.println("accuracy:\t\t\t" + accuracy);
+		System.out.println("evasion:\t\t\t" + evasion);
+		System.out.println("individualValueHP:\t\t" + individualValueHP);
+		System.out.println("individualValueAttack:\t\t" + individualValueAttack);
+		System.out.println("individualValueDefense:\t\t" + individualValueDefense);
+		System.out.println("individualValueSpecialAttack:\t" + individualValueSpecialAttack);
+		System.out.println("individualValueSpecialDefense:\t" + individualValueSpecialDefense);
+		System.out.println("individualValueSpeed:\t\t" + individualValueSpeed);
+		System.out.println("baseExpYield:\t\t\t" + baseExpYield);
+		System.out.println("effortValueHP:\t\t\t" + effortValueHP);
+		System.out.println("effortValueAttack:\t\t" + effortValueAttack);
+		System.out.println("effortValueDefense:\t\t" + effortValueDefense);
+		System.out.println("effortValueSpecialAttack:\t" + effortValueSpecialAttack);
+		System.out.println("effortValueSpecialDefense:\t" + effortValueSpecialDefense);
+		System.out.println("effortValueSpeed:\t\t" + effortValueSpeed);
+	}
 
 
 	@Override
@@ -240,37 +375,35 @@ public class Pokemon {
 		return "Pokemon [name=" + name + ", customName=" + customName
 				+ ", sex=" + sex + ", id=" + id + ", pokedexID=" + pokedexID
 				+ ", isWild=" + isWild + ", isTraded=" + isTraded + ", typ1="
-				+ typ1 + ", typ2=" + typ2 + ", damageNormal="
-				+ Arrays.toString(damagedNormal) + ", damageDouble="
-				+ Arrays.toString(damagedDouble) + ", damageImmun="
-				+ Arrays.toString(damagedImmune) + ", damageHalf="
+				+ typ1 + ", typ2=" + typ2 + ", damagedNormal="
+				+ Arrays.toString(damagedNormal) + ", damagedDouble="
+				+ Arrays.toString(damagedDouble) + ", damagedImmune="
+				+ Arrays.toString(damagedImmune) + ", damagedHalf="
 				+ Arrays.toString(damagedHalf) + ", expType=" + expType
 				+ ", exp=" + exp + ", level=" + level + ", actualHP="
 				+ actualHP + ", status=" + status + ", item=" + item
 				+ ", moves=" + moves + ", learnableMoves=" + learnableMoves
-				+ ", evolveLevel=" + evolveLevel + ", hp=" + hp + ", attack="
-				+ attack + ", defense=" + defense + ", specialAttack="
-				+ specialAttack + ", specialDefense=" + specialDefense
-				+ ", speed=" + speed + ", accuracy=" + accuracy + ", evasion="
-				+ evasion + ", individualValueHP=" + individualValueHP
+				+ ", evolveLevel=" + evolveLevel + ", evolveToID=" + evolveToID
+				+ ", hp=" + hp + ", attack=" + attack + ", defense=" + defense
+				+ ", specialAttack=" + specialAttack + ", specialDefense="
+				+ specialDefense + ", speed=" + speed + ", baseHP=" + baseHP
+				+ ", baseAttack=" + baseAttack + ", baseDefense=" + baseDefense
+				+ ", baseSpecialAttack=" + baseSpecialAttack
+				+ ", baseSpecialDefense=" + baseSpecialDefense + ", baseSpeed="
+				+ baseSpeed + ", accuracy=" + accuracy + ", evasion=" + evasion
+				+ ", individualValueHP=" + individualValueHP
 				+ ", individualValueAttack=" + individualValueAttack
 				+ ", individualValueDefense=" + individualValueDefense
 				+ ", individualValueSpecialAttack="
 				+ individualValueSpecialAttack
 				+ ", individualValueSpecialDefense="
-				+ individualValueSpecialDefense
-				+ ", individualValueInitiative=" + individualValueInitiative
-				+ ", individualValueSpeed=" + individualValueSpeed
-				+ ", baseExpYield=" + baseExpYield + ", effortValueHP="
-				+ effortValueHP + ", effortValueAttack=" + effortValueAttack
-				+ ", effortValueDefense=" + effortValueDefense
-				+ ", effortValueSpecialAttack=" + effortValueSpecialAttack
-				+ ", effortValueSpecialDefense=" + effortValueSpecialDefense
-				+ ", effortValueSpeed=" + effortValueSpeed + "]";
+				+ individualValueSpecialDefense + ", individualValueSpeed="
+				+ individualValueSpeed + ", baseExpYield=" + baseExpYield
+				+ ", effortValueHP=" + effortValueHP + ", effortValueAttack="
+				+ effortValueAttack + ", effortValueDefense="
+				+ effortValueDefense + ", effortValueSpecialAttack="
+				+ effortValueSpecialAttack + ", effortValueSpecialDefense="
+				+ effortValueSpecialDefense + ", effortValueSpeed="
+				+ effortValueSpeed + "]";
 	}
-	
-	
-	
-	
-	// TODO Methoden
 }

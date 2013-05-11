@@ -10,10 +10,8 @@ public class SQLiteConnector {
 	
 	static Connection connection = null;
 	
-	public static ResultSet getPokemonInfo(int pokedexID) {
-		
-		ResultSet results = null;
-		
+	private static void connectToDB() {
+
 		//load SQLite JDBC Driver
 		try {
 			Class.forName("org.sqlite.JDBC");
@@ -21,6 +19,29 @@ public class SQLiteConnector {
 			System.out.println("SQLite JDBC Driver could not be found.");
 			System.err.println(e.getMessage());
 		}
+		
+	}
+	
+	public static boolean closeConnection() {
+		try {
+			if(connection != null) {
+				connection.close();
+				return true;
+			} else {
+				return true;
+			}
+		} catch(SQLException e) {
+			System.out.println("Connection couldn't be closed.");
+			System.err.println(e);
+			return false;
+		}
+	}
+	
+	public static ResultSet getPokemonInfo(int pokedexID) {
+		
+		connectToDB();
+		
+		ResultSet results = null;
 		
 		try {
 			// create a database connection
@@ -39,21 +60,32 @@ public class SQLiteConnector {
 		
 		// ToDo Exception for empty result
 		
-		return results;		
+		return results;
 	}
 	
-	public static boolean closeConnection() {
+	public static String getPokemonName(int pokedexID) {
+		
+		connectToDB();
+		
+		String pokemonName = null;
+		
 		try {
-			if(connection != null) {
-				connection.close();
-				return true;
-			} else {
-				return true;
-			}
+			// create a database connection
+			connection = DriverManager.getConnection("jdbc:sqlite:sqlite/Javamon.db");
+			Statement statement = connection.createStatement();
+			statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+			ResultSet results = statement.executeQuery("SELECT name FROM Stats WHERE pokedexID=" + pokedexID);
+			
+			pokemonName = results.getString("name");
+
 		} catch(SQLException e) {
-			System.out.println("Connection couldn't be closed.");
-			System.err.println(e);
-			return false;
+			System.out.println("Database file could not be found.");
+			System.err.println(e.getMessage());
 		}
+		
+		// ToDo Exception for empty result
+		
+		return pokemonName;
 	}
 }
