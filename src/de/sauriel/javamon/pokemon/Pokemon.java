@@ -9,6 +9,7 @@ import java.util.Random;
 
 import de.sauriel.javamon.moves.Move;
 import de.sauriel.javamon.system.LevelUpSystem;
+import de.sauriel.javamon.system.PokemonSet;
 import de.sauriel.javamon.system.SQLiteConnector;
 
 
@@ -98,68 +99,52 @@ public class Pokemon {
 			this.sex = "female";
 		}
 		
-		ResultSet pokemon = SQLiteConnector.getPokemonInfo(pokedexID);
+		PokemonSet pokemon = SQLiteConnector.getPokemonInfo(pokedexID);
 		
-		try {
-			while(pokemon.next()) {
+		this.pokedexID = pokemon.getInt("pokedexID");
+		this.name = pokemon.getString("name");
+		this.customName = pokemon.getString("name");
 				
-				this.pokedexID = pokemon.getInt("pokedexID");
-				this.name = pokemon.getString("name");
-				this.customName = pokemon.getString("name");
-				
-				this.typ1 = pokemon.getString("typ1");
-				this.typ2 = pokemon.getString("typ2");
+		this.typ1 = pokemon.getString("typ1");
+		this.typ2 = pokemon.getString("typ2");
 
-				damagedNormal = pokemon.getString("damagedNormal").split(";");
-				damagedDouble = pokemon.getString("damagedDouble").split(";");
-				damagedImmune = pokemon.getString("damagedImmune").split(";");
-				damagedHalf = pokemon.getString("damagedHalf").split(";");
+		damagedNormal = pokemon.getStringArray("damagedNormal");
+		damagedDouble = pokemon.getStringArray("damagedDouble");
+		damagedImmune = pokemon.getStringArray("damagedImmune");
+		damagedHalf = pokemon.getStringArray("damagedHalf");
+			
+		this.expType = pokemon.getString("expType");
 				
-				this.expType = pokemon.getString("expType");
+		this.moves = pokemon.getArrayList("baseMoves");
+		
+		this.learnableMoves = pokemon.getHashMap("learnableMoves");
 				
-				this.moves = new ArrayList<>();
-				String[] baseMovesSingle = pokemon.getString("baseMoves").split(";");
-				for (String baseMoves : baseMovesSingle) {
-					this.moves.add(new Move(baseMoves));
-				}
+		this.evolveLevel = pokemon.getInt("evolveLevel");
+		this.evolveToID = pokemon.getInt("evolveToID");
+		
+		this.baseHP = pokemon.getInt("hp");
+		this.baseAttack = pokemon.getInt("attack");
+		this.baseDefense = pokemon.getInt("defense");
+		this.baseSpecialAttack = pokemon.getInt("specialAttack");
+		this.baseSpecialDefense = pokemon.getInt("specialDefense");
+		this.baseSpeed = pokemon.getInt("speed");
 				
-				this.learnableMoves = new HashMap<>();
-				String[] learnableMovesSingle = pokemon.getString("learnableMoves").split(";");
-				for (String learnableMovesSplit : learnableMovesSingle) {
-					String[] movesMap = learnableMovesSplit.split(",");
-					this.learnableMoves.put(Integer.parseInt(movesMap[0]), movesMap[1]);
-				}
+		this.hp = pokemon.getInt("hp");
+		this.attack = pokemon.getInt("attack");
+		this.defense = pokemon.getInt("defense");
+		this.specialAttack = pokemon.getInt("specialAttack");
+		this.specialDefense = pokemon.getInt("specialDefense");
+		this.speed = pokemon.getInt("speed");
+		
+		this.baseExpYield = pokemon.getInt("baseExpYield");
 				
-				this.evolveLevel = pokemon.getInt("evolveLevel");
-				this.evolveToID = pokemon.getInt("evolveToID");
-				
-				this.baseHP = pokemon.getInt("hp");
-				this.baseAttack = pokemon.getInt("attack");
-				this.baseDefense = pokemon.getInt("defense");
-				this.baseSpecialAttack = pokemon.getInt("specialAttack");
-				this.baseSpecialDefense = pokemon.getInt("specialDefense");
-				this.baseSpeed = pokemon.getInt("speed");
-				
-				this.hp = pokemon.getInt("hp");
-				this.attack = pokemon.getInt("attack");
-				this.defense = pokemon.getInt("defense");
-				this.specialAttack = pokemon.getInt("specialAttack");
-				this.specialDefense = pokemon.getInt("specialDefense");
-				this.speed = pokemon.getInt("speed");
-				
-				this.baseExpYield = pokemon.getInt("baseExpYield");
-				
-				this.effortValueHP = pokemon.getInt("effortValueHP");
-				this.effortValueAttack = pokemon.getInt("effortValueAttack");
-				this.effortValueDefense = pokemon.getInt("effortValueDefense");
-				this.effortValueSpecialAttack = pokemon.getInt("effortValueSpecialAttack");
-				this.effortValueSpecialDefense = pokemon.getInt("effortValueSpecialDefense");
-				this.effortValueSpeed = pokemon.getInt("effortValueSpeed");
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.effortValueHP = pokemon.getInt("effortValueHP");
+		this.effortValueAttack = pokemon.getInt("effortValueAttack");
+		this.effortValueDefense = pokemon.getInt("effortValueDefense");
+		this.effortValueSpecialAttack = pokemon.getInt("effortValueSpecialAttack");
+		this.effortValueSpecialDefense = pokemon.getInt("effortValueSpecialDefense");
+		this.effortValueSpeed = pokemon.getInt("effortValueSpeed");
+		
 		
 		individualValueHP = new Random().nextInt(32);
 		individualValueAttack = new Random().nextInt(32);

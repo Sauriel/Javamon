@@ -8,7 +8,11 @@ import java.sql.Statement;
 
 public class SQLiteConnector {
 	
+	
+	
 	static Connection connection = null;
+	
+	
 	
 	private static void connectToDB() {
 
@@ -21,6 +25,8 @@ public class SQLiteConnector {
 		}
 		
 	}
+	
+	
 	
 	public static boolean closeConnection() {
 		try {
@@ -37,7 +43,9 @@ public class SQLiteConnector {
 		}
 	}
 	
-	public static ResultSet getPokemonInfo(int pokedexID) {
+	
+	
+	private static ResultSet getResult(String query) {
 		
 		connectToDB();
 		
@@ -49,7 +57,7 @@ public class SQLiteConnector {
 			Statement statement = connection.createStatement();
 			statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-			results = statement.executeQuery("SELECT * FROM Stats WHERE pokedexID=" + pokedexID);
+			results = statement.executeQuery(query);
 			
 //			statement.executeUpdate("INSERT INTO Stats values(1, 'Test')");
 
@@ -63,29 +71,38 @@ public class SQLiteConnector {
 		return results;
 	}
 	
-	public static String getPokemonName(int pokedexID) {
+	
+	
+	public static PokemonSet getPokemonInfo(int pokedexID) {
 		
-		connectToDB();
-		
-		String pokemonName = null;
+		String query = "SELECT * FROM Stats WHERE pokedexID=" + pokedexID;
+		PokemonSet result = null;
 		
 		try {
-			// create a database connection
-			connection = DriverManager.getConnection("jdbc:sqlite:sqlite/Javamon.db");
-			Statement statement = connection.createStatement();
-			statement.setQueryTimeout(30);  // set timeout to 30 sec.
-
-			ResultSet results = statement.executeQuery("SELECT name FROM Stats WHERE pokedexID=" + pokedexID);
-			
-			pokemonName = results.getString("name");
-
-		} catch(SQLException e) {
-			System.out.println("Database file could not be found.");
-			System.err.println(e.getMessage());
+			result = new PokemonSet(getResult(query));
+			closeConnection();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return result;
+	}
+	
+	
+	
+	public static String getPokemonName(int pokedexID) {
 		
-		// ToDo Exception for empty result
+		String query = "SELECT name FROM Stats WHERE pokedexID=" + pokedexID;
+		String result = null;
 		
-		return pokemonName;
+		try {
+			ResultSet pokemon = getResult(query);
+			result = pokemon.getString("name");
+			closeConnection();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
 	}
 }
