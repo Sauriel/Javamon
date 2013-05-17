@@ -70,24 +70,49 @@ public class PokemonSet {
 	}
 	
 	public String getString(String key) {
-		return (String) pokemonSet.get(key);
+		if (pokemonSet.get(key) instanceof String) {
+			return (String) pokemonSet.get(key);
+		} else {
+			// TODO throw an Exception
+			return null;
+		}
 	}
 	
 	public int getInt(String key) {
-		return (int) pokemonSet.get(key);
+		if (pokemonSet.get(key) instanceof Integer) {
+			return (int) pokemonSet.get(key);
+		} else {
+			// TODO throw an Exception
+			return -1;
+		}
 	}
 	
 	public String[] getStringArray(String key) {
-		return (String[]) pokemonSet.get(key);
+		if (pokemonSet.get(key) instanceof String[]) {
+			return (String[]) pokemonSet.get(key);
+		} else {
+			// TODO throw an Exception
+			return null;
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	public ArrayList<Move> getArrayList(String key) {
-		return (ArrayList<Move>) pokemonSet.get(key);
+		if (pokemonSet.get(key) instanceof ArrayList) {
+			return (ArrayList<Move>) pokemonSet.get(key);
+		} else {
+			// TODO throw an Exception
+			return null;
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	public HashMap<Integer, String> getHashMap(String key) {
-		return (HashMap<Integer, String>) pokemonSet.get(key);
+		if (pokemonSet.get(key) instanceof HashMap) {
+			return (HashMap<Integer, String>) pokemonSet.get(key);
+		} else {
+			// TODO throw an Exception
+			return null;
+		}
 	}
 }
